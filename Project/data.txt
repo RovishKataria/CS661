@@ -1,0 +1,436 @@
+Overview of Datasets and Columns
+
+1. Google Mobility Data (google_mobility.csv)
+Purpose: Shows changes in people's movement patterns across various places (e.g., workplaces, parks, residential) during the pandemic.
+Columns:
+ - country: Country name
+ - date: Date of observation
+ - trend: Percentage change in mobility from baseline (positive means increased mobility; negative means reduced mobility)
+
+2. COVID Spread Data (spread.csv)
+Purpose: Tracks COVID-19 case and death metrics over time per country.
+Columns:
+ - new_cases: Number of new daily confirmed cases
+ - new_deaths: Number of new daily deaths
+ - new_cases_per_million: Adjusted per million population
+ - total_cases_per_million: Cumulative total cases per million
+ - new_deaths_per_million: Daily deaths per million
+ - total_deaths_per_million: Total deaths per million
+ - country, date: To merge with mobility
+
+3. Testing Data (testing.csv)
+Purpose: To show the extent of COVID-19 testing per country
+Columns:
+ - total_tests: Cumulative number of tests performed
+ - new_tests: New tests conducted on a specific date
+ - new_tests_per_thousand: Normalized version for country comparison
+ - country, date: For merging
+
+4. Vaccination Data (vaccinations_global.csv)
+Purpose: Tracks vaccination progress (people partially/fully vaccinated, booster shots, etc.)
+Columns (selected):
+ - people_vaccinated_per_hundred: % of people who received at least one dose
+ - people_fully_vaccinated_per_hundred: % of fully vaccinated people
+ - total_boosters_per_hundred: % who got booster doses
+ - daily_people_vaccinated_smoothed_per_hundred: Smoothed daily change
+ - rolling_vaccinations_6m/12m_per_hundred: Rolling average in last 6 or 12 months
+ - country, date: To merge over time
+
+5. Policy Data (oxcgrt_policy.csv)
+Purpose: Captures various government policy responses (like lockdowns, school closings, etc.)
+Columns:
+ - c1m_school_closing: 0-3 scale (none to full closing)
+ - c2m_workplace_closing: 0-3 scale
+ - c3m_cancel_public_events, c4m_restrictions_on_gatherings, etc.
+ - c6m_stay_at_home_requirements: Stay-at-home orders
+ - stringency_index: Composite index (0-100) showing how strict policies are
+ - stringency_index_vax, stringency_index_nonvax, stringency_index_weighted_average: Variations based on vaccination status
+ - country, date: To align with other data
+
+6. Geolocation Data (countries.csv)
+Purpose: Contains basic geographical data to be used in maps or geospatial visuals
+Columns:
+ - country: Name
+ - isocode: Standard 3-letter ISO code
+ - latitude, longitude: For mapping
+
+🧠 Why These Datasets?
+Together, they allow you to analyze how mobility changed, and what factors might have influenced it — such as:
+
+Rise/fall in COVID cases
+
+Changes in government policies
+
+Testing capacity
+
+Vaccination progress
+
+
+countries.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 250 entries, 0 to 249
+Data columns (total 4 columns):
+ #   Column     Non-Null Count  Dtype  
+---  ------     --------------  -----  
+ 0   country    250 non-null    object 
+ 1   isocode    232 non-null    object 
+ 2   latitude   250 non-null    float64
+ 3   longitude  250 non-null    float64
+dtypes: float64(2), object(2)
+memory usage: 7.9+ KB
+None
+
+covax.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 29 entries, 0 to 28
+Data columns (total 14 columns):
+ #   Column                     Non-Null Count  Dtype  
+---  ------                     --------------  -----  
+ 0   country                    29 non-null     object 
+ 1   year                       29 non-null     int64  
+ 2   delivered                  29 non-null     int64  
+ 3   only_donated               29 non-null     int64  
+ 4   only_announced             29 non-null     int64  
+ 5   delivered_per_gdp          29 non-null     float64
+ 6   only_donated_per_gdp       29 non-null     float64
+ 7   only_announced_per_gdp     29 non-null     float64
+ 8   delivered_per_used         29 non-null     float64
+ 9   only_donated_per_used      29 non-null     float64
+ 10  only_announced_per_used    29 non-null     float64
+ 11  delivered_per_capita       29 non-null     float64
+ 12  only_donated_per_capita    29 non-null     float64
+ 13  only_announced_per_capita  29 non-null     float64
+dtypes: float64(9), int64(4), object(1)
+memory usage: 3.3+ KB
+None
+
+excess_mortality_rconomics.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 55458 entries, 0 to 55457
+Data columns (total 20 columns):
+ #   Column                                                               Non-Null Count  Dtype  
+---  ------                                                               --------------  -----  
+ 0   country                                                              55458 non-null  object 
+ 1   date                                                                 55458 non-null  object 
+ 2   cumulative_estimated_daily_excess_deaths                             55458 non-null  float64
+ 3   cumulative_estimated_daily_excess_deaths_ci_95_top                   55458 non-null  float64
+ 4   cumulative_estimated_daily_excess_deaths_ci_95_bot                   55458 non-null  float64
+ 5   cumulative_estimated_daily_excess_deaths_per_100k                    55458 non-null  float64
+ 6   cumulative_estimated_daily_excess_deaths_ci_95_top_per_100k          55458 non-null  float64
+ 7   cumulative_estimated_daily_excess_deaths_ci_95_bot_per_100k          55458 non-null  float64
+ 8   estimated_daily_excess_deaths                                        55458 non-null  float64
+ 9   estimated_daily_excess_deaths_ci_95_top                              55458 non-null  float64
+ 10  estimated_daily_excess_deaths_ci_95_bot                              55458 non-null  float64
+ 11  estimated_daily_excess_deaths_per_100k                               55458 non-null  float64
+ 12  estimated_daily_excess_deaths_ci_95_top_per_100k                     55458 non-null  float64
+ 13  estimated_daily_excess_deaths_ci_95_bot_per_100k                     55458 non-null  float64
+ 14  cumulative_estimated_daily_excess_deaths_last12m                     4266 non-null   float64
+ 15  cumulative_estimated_daily_excess_deaths_per_100k_last12m            4266 non-null   float64
+ 16  cumulative_estimated_daily_excess_deaths_ci_95_bot_last12m           4266 non-null   float64
+ 17  cumulative_estimated_daily_excess_deaths_ci_95_bot_per_100k_last12m  4266 non-null   float64
+ 18  cumulative_estimated_daily_excess_deaths_ci_95_top_last12m           4266 non-null   float64
+ 19  cumulative_estimated_daily_excess_deaths_ci_95_top_per_100k_last12m  4266 non-null   float64
+dtypes: float64(18), object(2)
+memory usage: 8.5+ MB
+None
+
+excess_mortality.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 18855 entries, 0 to 18854
+Data columns (total 42 columns):
+ #   Column                                        Non-Null Count  Dtype  
+---  ------                                        --------------  -----  
+ 0   entity                                        18855 non-null  object 
+ 1   date                                          18855 non-null  object 
+ 2   time                                          18855 non-null  int64  
+ 3   time_unit                                     18855 non-null  object 
+ 4   average_deaths_2015_2019_all_ages             3803 non-null   float64
+ 5   p_avg_0_14                                    8715 non-null   float64
+ 6   p_avg_15_64                                   8801 non-null   float64
+ 7   p_avg_65_74                                   8801 non-null   float64
+ 8   p_avg_75_84                                   8801 non-null   float64
+ 9   p_avg_85p                                     8801 non-null   float64
+ 10  p_avg_all_ages                                16944 non-null  float64
+ 11  projected_deaths_since_2020_all_ages          14468 non-null  float64
+ 12  p_proj_0_14                                   7023 non-null   float64
+ 13  p_proj_15_64                                  7093 non-null   float64
+ 14  p_proj_65_74                                  7093 non-null   float64
+ 15  p_proj_75_84                                  7093 non-null   float64
+ 16  p_proj_85p                                    7093 non-null   float64
+ 17  p_proj_all_ages                               13620 non-null  float64
+ 18  excess_proj_all_ages                          13620 non-null  float64
+ 19  deaths_since_2020_all_ages                    16968 non-null  float64
+ 20  deaths_2010_all_ages                          1457 non-null   float64
+ 21  deaths_2011_all_ages                          1560 non-null   float64
+ 22  deaths_2012_all_ages                          1560 non-null   float64
+ 23  deaths_2013_all_ages                          1560 non-null   float64
+ 24  deaths_2014_all_ages                          1560 non-null   float64
+ 25  deaths_2015_all_ages                          3569 non-null   float64
+ 26  deaths_2016_all_ages                          3630 non-null   float64
+ 27  deaths_2017_all_ages                          3700 non-null   float64
+ 28  deaths_2018_all_ages                          3736 non-null   float64
+ 29  deaths_2019_all_ages                          3748 non-null   float64
+ 30  deaths_2020_all_ages                          3811 non-null   float64
+ 31  deaths_2021_all_ages                          3726 non-null   float64
+ 32  deaths_2022_all_ages                          3530 non-null   float64
+ 33  deaths_2023_all_ages                          3180 non-null   float64
+ 34  deaths_2024_all_ages                          2721 non-null   float64
+ 35  cum_excess_proj_all_ages                      13620 non-null  float64
+ 36  cum_proj_deaths_all_ages                      14468 non-null  float64
+ 37  cum_p_proj_all_ages                           13620 non-null  float64
+ 38  excess_per_million_proj_all_ages              13586 non-null  float64
+ 39  cum_excess_per_million_proj_all_ages          13586 non-null  float64
+ 40  cum_excess_proj_all_ages_last12m              0 non-null      float64
+ 41  cum_excess_per_million_proj_all_ages_last12m  0 non-null      float64
+dtypes: float64(38), int64(1), object(3)
+memory usage: 6.0+ MB
+None
+
+google_mobility.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 784944 entries, 0 to 784943
+Data columns (total 4 columns):
+ #   Column   Non-Null Count   Dtype  
+---  ------   --------------   -----  
+ 0   country  784944 non-null  object 
+ 1   date     784944 non-null  object 
+ 2   place    784944 non-null  object 
+ 3   trend    771336 non-null  float64
+dtypes: float64(1), object(3)
+memory usage: 24.0+ MB
+None
+
+hospital.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 46777 entries, 0 to 46776
+Data columns (total 11 columns):
+ #   Column                         Non-Null Count  Dtype  
+---  ------                         --------------  -----  
+ 0   country                        46777 non-null  object 
+ 1   country_code                   46777 non-null  object 
+ 2   date                           46777 non-null  object 
+ 3   daily_occupancy_icu            39116 non-null  float64
+ 4   daily_occupancy_icu_per_1m     39116 non-null  float64
+ 5   daily_occupancy_hosp           40656 non-null  float64
+ 6   daily_occupancy_hosp_per_1m    40656 non-null  float64
+ 7   weekly_admissions_icu          10993 non-null  float64
+ 8   weekly_admissions_icu_per_1m   10993 non-null  float64
+ 9   weekly_admissions_hosp         24497 non-null  float64
+ 10  weekly_admissions_hosp_per_1m  24497 non-null  float64
+dtypes: float64(8), object(3)
+memory usage: 3.9+ MB
+None
+
+oxcgrt_policy.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 202760 entries, 0 to 202759
+Data columns (total 31 columns):
+ #   Column                                                                          Non-Null Count   Dtype  
+---  ------                                                                          --------------   -----  
+ 0   country                                                                         202760 non-null  object 
+ 1   date                                                                            202760 non-null  object 
+ 2   c1m_school_closing                                                              202760 non-null  int64  
+ 3   c2m_workplace_closing                                                           202760 non-null  int64  
+ 4   c3m_cancel_public_events                                                        202760 non-null  int64  
+ 5   c4m_restrictions_on_gatherings                                                  202760 non-null  int64  
+ 6   c5m_close_public_transport                                                      202760 non-null  int64  
+ 7   c6m_stay_at_home_requirements                                                   202760 non-null  int64  
+ 8   c7m_restrictions_on_internal_movement                                           202760 non-null  int64  
+ 9   c8ev_international_travel_controls                                              202760 non-null  int64  
+ 10  e1_income_support                                                               202760 non-null  int64  
+ 11  e2_debt_contract_relief                                                         202760 non-null  int64  
+ 12  e3_fiscal_measures                                                              106288 non-null  float64
+ 13  e4_international_support                                                        106370 non-null  float64
+ 14  h1_public_information_campaigns                                                 202760 non-null  int64  
+ 15  h2_testing_policy                                                               202760 non-null  int64  
+ 16  h3_contact_tracing                                                              202760 non-null  int64  
+ 17  h4_emergency_investment_in_healthcare                                           106245 non-null  float64
+ 18  h5_investment_in_vaccines                                                       198475 non-null  float64
+ 19  h6m_facial_coverings                                                            202760 non-null  int64  
+ 20  h7_vaccination_policy                                                           202760 non-null  int64  
+ 21  v2a_vaccine_availability__summary                                               202760 non-null  int64  
+ 22  v2b_vaccine_age_eligibility_availability_age_floor__general_population_summary  118396 non-null  object 
+ 23  v2c_vaccine_age_eligibility_availability_age_floor__at_risk_summary             120360 non-null  object 
+ 24  stringency_index                                                                202760 non-null  float64
+ 25  containment_health_index                                                        202760 non-null  float64
+ 26  v2_vaccine_availability__summary                                                202760 non-null  int64  
+ 27  v2_pregnant_people                                                              28192 non-null   float64
+ 28  stringency_index_nonvax                                                         202760 non-null  float64
+ 29  stringency_index_vax                                                            202760 non-null  float64
+ 30  stringency_index_weighted_average                                               200568 non-null  float64
+dtypes: float64(10), int64(17), object(4)
+memory usage: 48.0+ MB
+None
+
+spread.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 364750 entries, 0 to 364749
+Data columns (total 13 columns):
+ #   Column                    Non-Null Count   Dtype  
+---  ------                    --------------   -----  
+ 0   country                   364750 non-null  object 
+ 1   date                      364750 non-null  object 
+ 2   new_cases                 364750 non-null  float64
+ 3   total_cases               364750 non-null  int64  
+ 4   new_deaths                364750 non-null  float64
+ 5   total_deaths              364750 non-null  int64  
+ 6   new_cases_per_million     364750 non-null  float64
+ 7   total_cases_per_million   364750 non-null  float64
+ 8   new_deaths_per_million    364750 non-null  float64
+ 9   total_deaths_per_million  364750 non-null  float64
+ 10  latititude                364750 non-null  float64
+ 11  longitude                 364750 non-null  float64
+ 12  isocode                   338488 non-null  object 
+dtypes: float64(8), int64(2), object(3)
+memory usage: 36.2+ MB
+None
+
+testing.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 106788 entries, 0 to 106787
+Data columns (total 8 columns):
+ #   Column                                Non-Null Count   Dtype  
+---  ------                                --------------   -----  
+ 0   country                               106788 non-null  object 
+ 1   date                                  106788 non-null  object 
+ 2   total_tests                           79387 non-null   float64
+ 3   new_tests                             75403 non-null   float64
+ 4   total_tests_per_thousand              79387 non-null   float64
+ 5   new_tests_per_thousand                75403 non-null   float64
+ 6   new_tests_7day_smoothed               103965 non-null  float64
+ 7   new_tests_per_thousand_7day_smoothed  103965 non-null  float64
+dtypes: float64(6), object(2)
+memory usage: 6.5+ MB
+None
+
+tracking_r.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 185683 entries, 0 to 185682
+Data columns (total 8 columns):
+ #   Column           Non-Null Count   Dtype  
+---  ------           --------------   -----  
+ 0   country          185683 non-null  object 
+ 1   date             185683 non-null  object 
+ 2   r                185683 non-null  float64
+ 3   ci_95_u          185683 non-null  float64
+ 4   ci_95_l          185683 non-null  float64
+ 5   ci_65_u          185683 non-null  float64
+ 6   ci_65_l          185683 non-null  float64
+ 7   days_infectious  185683 non-null  int64  
+dtypes: float64(5), int64(1), object(2)
+memory usage: 11.3+ MB
+None
+
+vaccinations_age.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 74142 entries, 0 to 74141
+Data columns (total 6 columns):
+ #   Column                               Non-Null Count  Dtype  
+---  ------                               --------------  -----  
+ 0   country                              74142 non-null  object 
+ 1   age_group                            74142 non-null  object 
+ 2   date                                 74142 non-null  object 
+ 3   people_vaccinated_per_hundred        73283 non-null  float64
+ 4   people_fully_vaccinated_per_hundred  71642 non-null  float64
+ 5   people_with_booster_per_hundred      64623 non-null  float64
+dtypes: float64(3), object(3)
+memory usage: 3.4+ MB
+None
+
+vaccinations_global.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 203057 entries, 0 to 203056
+Data columns (total 29 columns):
+ #   Column                                                   Non-Null Count   Dtype  
+---  ------                                                   --------------   -----  
+ 0   country                                                  203057 non-null  object 
+ 1   date                                                     203057 non-null  object 
+ 2   total_vaccinations                                       83222 non-null   float64
+ 3   people_vaccinated                                        79011 non-null   float64
+ 4   people_fully_vaccinated                                  77011 non-null   float64
+ 5   total_boosters                                           58784 non-null   float64
+ 6   daily_vaccinations                                       68876 non-null   float64
+ 7   daily_vaccinations_smoothed                              202840 non-null  float64
+ 8   daily_people_vaccinated_smoothed                         202840 non-null  float64
+ 9   total_vaccinations_per_hundred                           83222 non-null   float64
+ 10  people_vaccinated_per_hundred                            79011 non-null   float64
+ 11  people_fully_vaccinated_per_hundred                      77011 non-null   float64
+ 12  total_boosters_per_hundred                               58784 non-null   float64
+ 13  daily_people_vaccinated_smoothed_per_hundred             202840 non-null  float64
+ 14  daily_vaccinations_smoothed_per_million                  202840 non-null  float64
+ 15  people_unvaccinated                                      79011 non-null   float64
+ 16  share_of_boosters                                        1336 non-null    float64
+ 17  total_vaccinations_interpolated                          203057 non-null  float64
+ 18  people_vaccinated_interpolated                           203057 non-null  float64
+ 19  people_fully_vaccinated_interpolated                     203057 non-null  float64
+ 20  total_boosters_interpolated                              203057 non-null  float64
+ 21  total_vaccinations_no_boosters_interpolated              203057 non-null  float64
+ 22  total_vaccinations_no_boosters_per_hundred_interpolated  58329 non-null   float64
+ 23  rolling_vaccinations_6m                                  202840 non-null  float64
+ 24  rolling_vaccinations_6m_per_hundred                      202840 non-null  float64
+ 25  rolling_vaccinations_9m                                  202840 non-null  float64
+ 26  rolling_vaccinations_9m_per_hundred                      202840 non-null  float64
+ 27  rolling_vaccinations_12m                                 202840 non-null  float64
+ 28  rolling_vaccinations_12m_per_hundred                     202840 non-null  float64
+dtypes: float64(27), object(2)
+memory usage: 44.9+ MB
+None
+
+vaccinations_manufacturer.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 888360 entries, 0 to 888359
+Data columns (total 4 columns):
+ #   Column              Non-Null Count   Dtype 
+---  ------              --------------   ----- 
+ 0   country             888360 non-null  object
+ 1   vaccine             888360 non-null  object
+ 2   date                888360 non-null  object
+ 3   total_vaccinations  888360 non-null  int64 
+dtypes: int64(1), object(3)
+memory usage: 27.1+ MB
+None
+
+vaccinations_us.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 54628 entries, 0 to 54627
+Data columns (total 16 columns):
+ #   Column                               Non-Null Count  Dtype  
+---  ------                               --------------  -----  
+ 0   state                                54628 non-null  object 
+ 1   date                                 54628 non-null  object 
+ 2   total_vaccinations                   32532 non-null  float64
+ 3   total_distributed                    32272 non-null  float64
+ 4   people_vaccinated                    32268 non-null  float64
+ 5   people_fully_vaccinated_per_hundred  30651 non-null  float64
+ 6   total_vaccinations_per_hundred       30750 non-null  float64
+ 7   people_fully_vaccinated              32188 non-null  float64
+ 8   people_vaccinated_per_hundred        30726 non-null  float64
+ 9   distributed_per_hundred              30730 non-null  float64
+ 10  daily_vaccinations_raw               28354 non-null  float64
+ 11  daily_vaccinations                   54563 non-null  float64
+ 12  daily_vaccinations_per_million       51716 non-null  float64
+ 13  share_doses_used                     32272 non-null  float64
+ 14  total_boosters                       18116 non-null  float64
+ 15  total_boosters_per_hundred           17254 non-null  float64
+dtypes: float64(14), object(2)
+memory usage: 6.7+ MB
+None
+
+yougov_composite.csv
+<class 'pandas.core.frame.DataFrame'>
+RangeIndex: 172 entries, 0 to 171
+Data columns (total 6 columns):
+ #   Column                                           Non-Null Count  Dtype  
+---  ------                                           --------------  -----  
+ 0   country                                          172 non-null    object 
+ 1   date                                             172 non-null    object 
+ 2   people_vaccinated_per_hundred                    172 non-null    float64
+ 3   uncertain_covid_vaccinate_this_week_pct_pop      172 non-null    float64
+ 4   unwillingness_covid_vaccinate_this_week_pct_pop  172 non-null    float64
+ 5   willingness_covid_vaccinate_this_week_pct_pop    172 non-null    float64
+dtypes: float64(4), object(2)
+memory usage: 8.2+ KB
+None
+
+
+trend is percentage change in mobility
