@@ -2,13 +2,13 @@ import vtk
 import numpy as np
 import sys
 
-# Step size and maximum number of steps for RK4
+# Step size and maximum number of steps
 STEP_SIZE = 0.05 # How far to move in each RK4 step
 MAX_STEPS = 1000 # Maximum number of integration steps
 
 def load_VTK_file(filepath):
     """
-    Loads a VTK image data (.vti) file and returns the data object.
+    Loads a VTK file (.vti) and returns the data object.
     This function uses vtkXMLImageDataReader to read structured volumetric data.
     The output is a VTK data object that we can sample for vector values.
     """
@@ -19,9 +19,8 @@ def load_VTK_file(filepath):
 
 def is_within_bounds(point, bounds):
     """
-    Check if a point lies within the data volume.
+    Check if a point lies within the bounds.
     This prevents us from tracing streamlines into areas where there is no data.
-    It's a simple safeguard to keep interpolation meaningful.
     """
     x, y, z = point
     return (bounds[0] <= x <= bounds[1] and
@@ -31,7 +30,6 @@ def is_within_bounds(point, bounds):
 def get_vector_at_point(data, point):
     """
     Interpolates the vector field at a specific point using vtkProbeFilter.
-    This is the core of our continuous integration.
     It allows us to estimate vector values at arbitrary locations, not just grid points.
     """
     # Creating a single-point polydata
@@ -56,8 +54,7 @@ def get_vector_at_point(data, point):
 def rk4_integration(data, point, step_size, bounds):
     """
     Performs one RK4 step to estimate the next point.
-    RK4 is a higher-order method for numerical integration of ODEs.
-    Here, it helps us trace smooth streamlines through a vector field.
+    It helps us trace smooth streamlines through a vector field.
     """
     # Sampling vectors at intermediate points to estimate the next point
     v1 = get_vector_at_point(data, point)
@@ -124,7 +121,7 @@ def trace_streamline(field_data, seed_loc, step_size, max_steps):
 
 def save_streamline(points_list, filename):
     """
-    This makes the streamline viewable in tools like ParaView or VTK viewers.
+    This saves the output file which is viewable in tools like ParaView.
     """
     points = vtk.vtkPoints()
     lines = vtk.vtkCellArray()
@@ -150,10 +147,8 @@ def save_streamline(points_list, filename):
 
 def main():
     """
-    Entry point for the script.
     Expects the command line to provide a seed location (x, y, z),
-    a .vti file to trace streamlines from
-    and a .vtp file name to save streamline.
+    a .vti file and a .vtp file name to save streamline.
     """
     if len(sys.argv) != 6:
         print("Usage: python particle_tracing.py <x> <y> <z> tornado3d_vector.vti <output_file.vtp>")
