@@ -1,5 +1,54 @@
-Main Project Theme
-"How Government Policies, Testing, and Vaccination Affected Mobility and COVID-19 Spread Globally"
+Link for exploring:
+https://www.thoughtspot.com/data-trends/data-visualization/types-of-charts-graphs#TDV7
+https://datavizcatalogue.com/
+https://plotly.com/python/
+https://www.datylon.com/blog/types-of-charts-graphs-examples-data-visualization
+https://github.com/sameermahajan/MLWorkshop/blob/master/13.%20Visualization/Violin%20Plot.ipynb
+https://www.rawgraphs.io/
+
+
+✅ Finalized 8 Visualizations + Confirmed Details:
+1. Line Chart: Multi-country Mobility Over Time
+📈 px.line() grouped by country and date.
+Y-axis: Mobility Index (%).
+✔️ No normalization — keep original percentage values.
+✅ Perfect for trend comparison across countries.
+
+2. Bar Chart: Year-wise Global Mobility
+📊 groupby(year)['trend'].mean() → single bar per year.
+X-axis: Year, Y-axis: Average Global Mobility (%).
+✅ Clear way to contrast 2020 vs 2021 vs 2022, etc.
+
+3. Treemap: Movement vs Stay-at-home Policy
+🗺️ Filter: c6m_stay_at_home_requirements > 0.
+Size: Mobility Index, Color: Policy Level (0–3).
+✅ Effectively shows how policy strictness varied and its impact.
+
+4. Heatmap: Mobility When Vaccination Started
+🔥 First non-zero vaccination date per country.
+Static heatmap: Country vs Month, value = Mobility Index.
+✅ Clean, informative layout with one heatmap.
+
+5. Pareto Chart: New Cases vs Mobility (Top 20 Countries)
+📊 Bar: Total New Cases, Line: Avg Mobility Index.
+Restricting to top 20 countries avoids visual overload.
+✅ Good call — makes patterns more readable.
+
+6. Geo Chart: Animated Global Mobility Map
+🗺️ px.choropleth(), animation frame = date.
+Color by Mobility Index, ISO codes from your country dataset.
+✅ High engagement potential — audience favorite.
+
+7. Funnel Chart: Mobility by Continent
+🔽 Grouped by continent, sorted by Mobility Index (descending).
+✅ Clean summary of regional behavior.
+
+8. Histograms: Year-wise Metrics
+📊 For each year, show metrics: tests, cases, deaths, vax, policies, mobility.
+Separate histogram for each year, with all 6 metrics on X-axis.
+✅ Helps compare severity & response between years.
+
+
 
 ✅ Key Ideas & Visualization Themes
 1. Global Mobility Trends Over Time
@@ -84,8 +133,8 @@ rolling_vaccinations_6m_per_hundred, rolling_vaccinations_12m_per_hundred	Vaccin
 
 📍 oxcgrt_policy.csv
 Column	Meaning
-c1m_school_closing, c2m_workplace_closing, c6m_stay_at_home_requirements, c7m_restrictions_on_internal_movement	Core policy indicators affecting mobility
-stringency_index, containment_health_index, stringency_index_weighted_average	Composite indices measuring policy severity
+c1m_school_closing, c2m_workplace_closing, c6m_stay_at_home_requirements, c7m_restrictions_on_internal_movement: Core policy indicators affecting mobility
+stringency_index, containment_health_index, stringency_index_weighted_average: Composite indices measuring policy severity
 ✅ Why needed: To observe if and how strict policies affected mobility.
 
 📍 countries.csv
@@ -161,3 +210,58 @@ Goal: A high-level timeline plot for story-building.
 Plot Type: Multi-line plot or area plot
 
 Why multi-line?: You can show vaccination progress, mobility, and policy in the same time frame to show interactions.
+
+
+1. Global Mobility Trends Over Time
+What it tells:
+This line chart shows the average global mobility level over time during the COVID-19 pandemic.
+Insight:
+It reveals significant drops during lockdown periods (e.g., early 2020), gradual recoveries, and periods of plateau, showing how the world responded in mobility to changing pandemic conditions.
+
+2. Single Country Mobility and COVID Spread
+What it tells:
+Compares one country’s mobility trends with COVID-19 case numbers over time.
+Insight:
+Shows whether stricter mobility restrictions correlated with reduced COVID spread, or when mobility returned as cases declined.
+
+3. Single Country Mobility vs Stringency
+What it tells:
+Juxtaposes mobility trends with the government’s stringency index (lockdown intensity).
+Insight:
+Helps assess how strictly implemented policies impacted movement — for example, high stringency often aligns with sharp drops in mobility.
+
+4. Heatmap of Mobility by Country and Month
+What it tells:
+Shows average mobility level across countries and months.
+Insight:
+Highlights which countries had the most or least movement in specific months. Great for identifying hot zones or long-term lockdown areas.
+
+5. Scatter Plot: Mobility vs COVID Cases
+What it tells:
+Visual correlation between average mobility and average new cases across countries.
+Insight:
+Assesses whether higher mobility led to more spread — useful to validate or question government strategies.
+
+6. Vaccination Rates vs Mobility
+What it tells:
+Compares full vaccination rates and mobility per country.
+Insight:
+See if countries with higher vaccination saw quicker mobility recovery. Good for understanding public trust and health policy effects.
+
+7. Policy Stringency vs Mobility Recovery
+What it tells:
+Plots government stringency index against mobility recovery.
+Insight:
+Was stricter policy more effective? Did it delay recovery? This answers it quantitatively.
+
+8. Multi-Country Mobility Comparison
+What it tells:
+Direct comparison of trends in selected countries.
+Insight:
+Visualizes differences in recovery patterns — e.g., some countries bounced back faster due to policy, vaccines, or economic reasons.
+
+9. World Map of Mobility Trends
+What it tells:
+Choropleth map showing average mobility per country.
+Insight:
+A global snapshot that’s instantly interpretable — perfect for showing geographic disparity and summarizing large data.
