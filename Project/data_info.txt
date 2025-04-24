@@ -54,17 +54,6 @@ Columns:
  - isocode: Standard 3-letter ISO code
  - latitude, longitude: For mapping
 
-🧠 Why These Datasets?
-Together, they allow you to analyze how mobility changed, and what factors might have influenced it — such as:
-
-Rise/fall in COVID cases
-
-Changes in government policies
-
-Testing capacity
-
-Vaccination progress
-
 
 countries.csv
 <class 'pandas.core.frame.DataFrame'>
@@ -431,6 +420,3 @@ Data columns (total 6 columns):
 dtypes: float64(4), object(2)
 memory usage: 8.2+ KB
 None
-
-
-trend is percentage change in mobility

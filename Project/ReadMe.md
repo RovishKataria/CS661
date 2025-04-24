@@ -23,13 +23,10 @@ Final Class Project: How Will It be Graded?
 The datasets can be accessed from link provided below.
 https://docs.owid.io/projects/etl/api/covid/#download-data
 
-
-I am writing what i want in my webpage.
-1. A filter to select the date range for the plots.
-2. A dropdown to select country along with a predictive search bar for the plots.
-3. A field which selects multiple countries for the plots.
-
-Give suggestions for plots.
-1. Plot showing the movement over time.
-2. Plot showing 
-
+Link for exploring charts and plots:
+https://www.thoughtspot.com/data-trends/data-visualization/types-of-charts-graphs#TDV7
+https://datavizcatalogue.com/
+https://plotly.com/python/
+https://www.datylon.com/blog/types-of-charts-graphs-examples-data-visualization
+https://github.com/sameermahajan/MLWorkshop/blob/master/13.%20Visualization/Violin%20Plot.ipynb
+https://www.rawgraphs.io/
