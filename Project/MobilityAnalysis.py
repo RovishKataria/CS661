@@ -4,19 +4,31 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from scipy.signal import savgol_filter
+import numpy as np
 
 # # ---------- Load Cleaned Data ----------
 # data_path = os.path.join("Datasets", "Mobility Analysis", "cleaned_data.parquet")
 # merged_df = pd.read_parquet(data_path)
+# merged_df = pd.read_parquet("cleaned_data.parquet")
+# merged_df["month"] = merged_df["date"].dt.to_period("M").astype(str)
+# merged_df["year"] = merged_df["date"].dt.year
 
-# ---------- Load Cleaned Data ----------
-merged_df = pd.read_parquet("cleaned_data.parquet")
-merged_df["month"] = merged_df["date"].dt.to_period("M").astype(str)
-merged_df["year"] = merged_df["date"].dt.year
+@st.cache_data
+def load_data():
+    # data_path = os.path.join("Datasets", "Mobility Analysis", "cleaned_data.parquet")
+    # merged_df = pd.read_parquet(data_path)
+    df = pd.read_parquet("cleaned_data.parquet")
+    df["month"] = df["date"].dt.to_period("M").astype(str)
+    df["year"] = df["date"].dt.year
+    return df
+
+# Then replace everywhere:
+merged_df = load_data()
+merged_df = merged_df.dropna(subset=["continent"])
 
 # ---------- Sidebar ----------
 st.sidebar.title("Filters")
-
 min_date = merged_df["date"].min()
 max_date = merged_df["date"].max()
 date_range = st.sidebar.date_input(
@@ -25,7 +37,6 @@ date_range = st.sidebar.date_input(
     min_value=min_date,
     max_value=max_date
 )
-
 # Filter merged_df based on selected date range
 merged_df = merged_df[
     (merged_df["date"] >= pd.to_datetime(date_range[0])) &
@@ -37,7 +48,9 @@ global_tab, top_tab, single_tab, multi_tab,  = st.tabs(["🌍 Global Overview", 
 
 # ---------- Global Overview ----------
 with global_tab:
+    st.info("Note: Google Mobility data was discontinued after October 15, 2022. Values may appear flat beyond this point due to no new updates.")
     st.subheader("1. Line Chart – Global Average Mobility Index Over Time")
+    st.write("This line chart shows how the average global mobility index changed over time, reflecting the impact of global COVID-19 waves and policy changes on human movement.")
     global_avg_mobility = merged_df.groupby("date")["trend"].mean().reset_index()
     fig_line = go.Figure()
     fig_line.add_trace(go.Scatter(x=global_avg_mobility["date"], y=global_avg_mobility["trend"],
@@ -62,6 +75,7 @@ with global_tab:
     st.plotly_chart(fig_line, use_container_width=True)
 
     st.subheader("2. Bar Chart – Year-wise Global Average Mobility Index Comparison")
+    st.write("This bar chart compares average global mobility by year, helping us observe year-over-year shifts due to lockdowns, reopenings, and vaccination rollouts.")
     yearly_avg_mobility = merged_df.groupby("year")["trend"].mean().reset_index()
     fig_bar = px.bar(
         yearly_avg_mobility,
@@ -73,11 +87,15 @@ with global_tab:
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.subheader("3. Treemap – Mobility under Combined Government Policies")
+    st.write("This treemap visualizes countries based on average mobility and combined policy stringency, highlighting how stronger restrictions typically correlate with reduced mobility.")
+    # Define relevant columns
     policy_cols = [
         "c1m_school_closing", "c2m_workplace_closing",
         "c6m_stay_at_home_requirements", "c7m_restrictions_on_internal_movement"
     ]
+    # Filter valid data
     treemap_data = merged_df.dropna(subset=["country", "trend"] + policy_cols)
+    # Group and calculate policy strength
     treemap_grouped = treemap_data.groupby("country").agg({
         "trend": "mean",
         "c1m_school_closing": "mean",
@@ -91,8 +109,21 @@ with global_tab:
         treemap_grouped["c6m_stay_at_home_requirements"] +
         treemap_grouped["c7m_restrictions_on_internal_movement"]
     )
+    # --- Zoom-In Slider ---
+    min_score = int(treemap_grouped["policy_score"].min())
+    max_score = int(treemap_grouped["policy_score"].max())
+    score_range = st.slider(
+        "Select Policy Strength Score Range (Zoom In)",
+        min_value=min_score,
+        max_value=max_score,
+        value=(min_score, max_score)
+    )
+    filtered_data = treemap_grouped[
+        (treemap_grouped["policy_score"] >= score_range[0]) &
+        (treemap_grouped["policy_score"] <= score_range[1])
+    ]
     fig_treemap = px.treemap(
-        treemap_grouped,
+        filtered_data,
         path=["country"],
         values="trend",
         color="policy_score",
@@ -104,26 +135,75 @@ with global_tab:
     )
     st.plotly_chart(fig_treemap, use_container_width=True)
 
-    st.subheader("4. Animated Bubble Map – Global Mobility Index by Country Every 2 Months")
-    merged_df["two_month"] = merged_df["date"].dt.to_period("2M").astype(str)
-    bubble_df = merged_df.groupby(
-        ["country", "latitude", "longitude", "two_month"], as_index=False
-    )["trend"].mean()
-    bubble_df["mobility_size"] = bubble_df["trend"].clip(lower=0)
-    fig_geo = px.scatter_geo(
-        bubble_df,
-        lat="latitude",
-        lon="longitude",
-        color="trend",
-        size="mobility_size",
-        hover_name="country",
-        animation_frame="two_month",
-        color_continuous_scale="RdBu_r",
-        size_max=20,
-        projection="natural earth"
+    st.header("3. Treemap – Mobility under Combined Government Policies")
+    st.write("This treemap visualizes countries based on average mobility and combined policy stringency, highlighting how stronger restrictions typically correlate with reduced mobility.")
+    st.write("Note: The treemap is based on the average mobility index and policy strength score, which is a sum of various government policies.")
+    # Step 1: Prepare Data
+    treemap_data = merged_df.dropna(subset=[
+        "continent", "country", "trend",
+        "c1m_school_closing", "c2m_workplace_closing",
+        "c6m_stay_at_home_requirements", "c7m_restrictions_on_internal_movement"
+    ]).copy()
+    # Calculate policy score
+    treemap_data["policy_score"] = (
+        treemap_data["c1m_school_closing"] +
+        treemap_data["c2m_workplace_closing"] +
+        treemap_data["c6m_stay_at_home_requirements"] +
+        treemap_data["c7m_restrictions_on_internal_movement"]
     )
-    fig_geo.update_layout(height=650)
-    st.plotly_chart(fig_geo, use_container_width=True)
+    # Group by Continent + Country
+    grouped = treemap_data.groupby(["continent", "country"], as_index=False).agg({
+        "trend": "mean",
+        "policy_score": "mean"
+    })
+    # Create Size based on mobility (must be positive)
+    grouped["mobility_size"] = grouped["trend"].abs() + 1
+    # Continent-Level Summary
+    continents_summary = grouped.groupby("continent").agg({
+        "mobility_size": "sum",
+        "policy_score": "mean"
+    }).reset_index()
+    continents_summary["country"] = ""
+    continents_summary["is_continent"] = True
+    # Mark countries
+    grouped["is_continent"] = False
+    # Merge
+    final_data = pd.concat([continents_summary, grouped], ignore_index=True)
+    # Now fix IDs properly
+    final_data["id"] = np.where(final_data["is_continent"],
+                                final_data["continent"],  # e.g., Asia
+                                final_data["continent"] + "/" + final_data["country"])  # e.g., Asia/China
+
+    final_data["parent"] = np.where(final_data["is_continent"], "", final_data["continent"])
+    # Drop NaNs
+    final_data = final_data.dropna(subset=["mobility_size", "policy_score", "id", "parent"])
+    # Step 2: Create Treemap
+    fig = go.Figure(go.Treemap(
+        ids=final_data["id"],
+        labels=np.where(final_data["is_continent"], final_data["continent"], final_data["country"]),
+        parents=final_data["parent"],
+        values=final_data["mobility_size"],
+        marker=dict(
+            colors=final_data["policy_score"],
+            colorscale="RdBu",
+            cmid=0,
+            colorbar=dict(title="Policy Strength Score")
+        ),
+        hovertemplate=(
+            "<b>%{label}</b><br>" +
+            "Avg Mobility: %{value:.2f}<br>" +
+            "Policy Score: %{color:.2f}<br>" +
+            "<extra></extra>"
+        ),
+        root_color="lightgrey",
+        branchvalues="total",
+    ))
+    fig.update_layout(
+        title_x=0.5,
+        margin=dict(t=50, l=25, r=25, b=25)
+    )
+    # Step 3: Streamlit Display
+    st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Top Countries ----------
 with top_tab:
@@ -134,10 +214,10 @@ with top_tab:
         index=1  # Default is 10
     )
 
-    st.subheader(f"1. Pareto Chart – New Cases vs Mobility (Top {top_n} Countries)")
+    st.subheader(f"1. Pareto Chart – Mobility in Top {top_n} Countries by COVID-19 Cases")
+    st.write("This dual-axis Pareto chart highlights countries with the highest number of COVID-19 cases and compares their mobility patterns to observe possible correlations between mobility and infection spread.")
     # Filter out aggregates like continents
     country_level_df = merged_df[~merged_df["country"].str.contains("World|Asia|Africa|Europe|America|Oceania", case=False)]
-
     # Group and prepare data
     pareto_data = country_level_df.groupby("country", as_index=False).agg({
         "new_cases": "sum",
@@ -145,47 +225,55 @@ with top_tab:
     }).rename(columns={"trend": "mobility_index"})
     pareto_data = pareto_data.dropna(subset=["new_cases", "mobility_index"])
     pareto_data["mobility_index"] = pareto_data["mobility_index"].round(2)
-
     # Sort and select top N
     top_cases_df = pareto_data.sort_values(by="new_cases", ascending=False).head(top_n)
-
     # Create Pareto chart
     fig_pareto = make_subplots(specs=[[{"secondary_y": True}]])
+    # Bar: New Cases (Left Y-Axis)
     fig_pareto.add_trace(
         go.Bar(
             x=top_cases_df["country"],
             y=top_cases_df["new_cases"],
             name="New Cases",
+            # text=top_cases_df["new_cases"].apply(lambda x: f"{x:,}"),
+            # textposition="auto",
+            marker_color="#1f77b4",
             hovertemplate="%{x}<br>New Cases: %{y:,}"
         ),
         secondary_y=False,
     )
+    # Line: Mobility Index (Right Y-Axis)
     fig_pareto.add_trace(
         go.Scatter(
             x=top_cases_df["country"],
             y=top_cases_df["mobility_index"],
             name="Mobility Index",
-            mode="lines+markers",
+            mode="lines+markers+text",
+            # text=top_cases_df["mobility_index"].apply(lambda x: f"{x:.2f}%"),
+            # textposition="top center",
+            line=dict(color="#ff7f0e"),
             hovertemplate="%{x}<br>Mobility Index: %{y:.2f}%"
         ),
         secondary_y=True,
     )
+    # Layout
     fig_pareto.update_layout(
         xaxis_title="Country",
-        yaxis_title="Total COVID-19 Cases",
-        yaxis2_title="Avg. Mobility Index (%)",
+        yaxis_title="Total COVID-19 Cases",               # Left Y-axis
+        yaxis2_title="Avg. Mobility Index (%)",           # Right Y-axis
         legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center"),
+        margin=dict(t=50, b=50)
     )
     st.plotly_chart(fig_pareto, use_container_width=True)
 
-    st.subheader(f"2. Funnel Chart – Top {top_n} Countries by Mobility")
+    st.subheader(f"2. Funnel Chart – Top {top_n} Countries Ranked by Mobility Index")
+    st.write("This funnel chart ranks countries purely based on their average mobility index, revealing which populations had the most movement freedom regardless of their case counts.")
     # Group and prepare mobility data
     mobility_data = country_level_df.groupby("country", as_index=False)["trend"].mean()
     mobility_data = mobility_data.dropna()
     mobility_data = mobility_data[mobility_data["trend"] > 0]
     mobility_data = mobility_data.sort_values(by="trend", ascending=False).head(top_n)
     mobility_data["trend"] = mobility_data["trend"].round(2)
-
     # Funnel chart
     fig_funnel = px.funnel(
         mobility_data,
@@ -195,52 +283,58 @@ with top_tab:
     )
     st.plotly_chart(fig_funnel, use_container_width=True)
 
-# ---------- Single Country ----------
+# ---------- Single Country ---------- with smoothing filter
 with single_tab:
+    st.info("Note: Google Mobility data was discontinued after October 15, 2022. Values may appear flat beyond this point due to no new updates.")
+    
     countries_available = merged_df["country"].dropna().unique()
     selected_country = st.selectbox(
         "Select a Country",
         options=sorted(countries_available),
         index=list(sorted(countries_available)).index("United States") if "United States" in countries_available else 0
     )
-    country_df = merged_df[merged_df["country"] == selected_country]
+    country_df = merged_df[merged_df["country"] == selected_country].copy()
 
-    st.subheader(f"1. Line Chart – Mobility Trend Over Time in {selected_country}")
-    fig1 = px.line(
-        country_df,
-        x="date",
-        y="trend",
-        labels={"trend": "Mobility Index (%)"},
-        title=f"Mobility Index in {selected_country} Over Time"
-    )
-    fig1.update_traces(
-        name="Mobility Index",
-        hovertemplate="%{x}<br>Mobility Index: %{y:.2f}%"
-    )
-    fig1.update_layout(xaxis_title="Date", yaxis_title="Mobility Index (%)")
-    st.plotly_chart(fig1, use_container_width=True)
+    # Set index to date
+    country_df = country_df.set_index("date")
 
+    # Keep only numeric columns for resampling
+    numeric_cols = ["trend", "new_cases"]
+    country_df_numeric = country_df[numeric_cols]
+    # Resample to daily, take mean, interpolate
+    country_df_numeric = country_df_numeric.resample('D').mean().interpolate()
 
-    st.subheader(f"2. Dual Axis Chart – Mobility Index vs New COVID-19 Cases in {selected_country}")
-    fig2 = make_subplots(specs=[[{"secondary_y": True}]])
-    
-    # Primary y-axis: Mobility Index
-    fig2.add_trace(
+    # Reset index
+    country_df_numeric = country_df_numeric.reset_index()
+
+    # Apply Savitzky-Golay smoothing only if enough points
+    if len(country_df_numeric) > 7:
+        country_df_numeric["trend_smoothed"] = savgol_filter(country_df_numeric["trend"], window_length=7, polyorder=2)
+    else:
+        country_df_numeric["trend_smoothed"] = country_df_numeric["trend"]
+
+    apply_smoothing = st.checkbox("Show Smoothed Mobility Trend", value=False)
+
+    st.subheader(f"1. Dual Axis Chart – Mobility Index vs New COVID-19 Cases in {selected_country}")
+    st.write("This chart overlays mobility trends with new COVID-19 cases for the selected country, helping us identify whether movement patterns align with surges or declines in infection rates.")
+    fig_single_country = make_subplots(specs=[[{"secondary_y": True}]])
+    # Mobility Index (left y-axis)
+    fig_single_country.add_trace(
         go.Scatter(
-            x=country_df["date"],
-            y=country_df["trend"],
-            name="Mobility Index",
+            x=country_df_numeric["date"],
+            y=country_df_numeric["trend_smoothed"] if apply_smoothing else country_df_numeric["trend"],
+            name="Mobility Index (Smoothed)" if apply_smoothing else "Mobility Index",
             mode="lines",
+            line=dict(color="green" if apply_smoothing else "blue"),
             hovertemplate="%{x}<br>Mobility Index: %{y:.2f}%"
         ),
         secondary_y=False
     )
-    
-    # Secondary y-axis: New Cases
-    fig2.add_trace(
+    # New Cases (right y-axis)
+    fig_single_country.add_trace(
         go.Scatter(
-            x=country_df["date"],
-            y=country_df["new_cases"],
+            x=country_df_numeric["date"],
+            y=country_df_numeric["new_cases"],
             name="New Cases",
             mode="lines",
             line=dict(color="firebrick"),
@@ -248,17 +342,18 @@ with single_tab:
         ),
         secondary_y=True
     )
-    
-    fig2.update_layout(
+    fig_single_country.update_layout(
         xaxis_title="Date",
         yaxis_title="Mobility Index (%)",
         yaxis2_title="New COVID-19 Cases",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        margin=dict(t=50, b=50)
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    st.plotly_chart(fig_single_country, use_container_width=True)
 
 # ---------- Multi-Country ----------
 with multi_tab:
+    st.info("Note: Google Mobility data was discontinued after October 15, 2022. Values may appear flat beyond this point due to no new updates.")
     countries_available = merged_df["country"].dropna().unique()
     multi_countries = st.multiselect(
         "Select Countries to Compare",
@@ -269,26 +364,33 @@ with multi_tab:
         # Extract unique years for filtering
         merged_df["year"] = merged_df["date"].dt.year
         years = sorted(merged_df["year"].dropna().unique())
-
         # Filter data for selected countries
         filtered = merged_df[merged_df["country"].isin(multi_countries)]
-
-        st.subheader("1. Line Chart – Multi-Country Mobility Comparison Over Time")
-        fig3 = px.line(
-            filtered,
-            x="date",
-            y="trend",
-            color="country",
-            labels={"trend": "Mobility Index (%)", "date": "Date"},
-            title="Mobility Trends Over Time by Country"
+        
+        st.subheader("1. Line Chart – Yearly Mobility Trend")
+        st.write("This multi-country line chart compares mobility trends across years, revealing how movement patterns evolved across different stages of the pandemic.")
+        # Resample or aggregate monthly if needed
+        filtered["month"] = filtered["date"].dt.to_period("M").astype(str)
+        # Group by month and country to get average monthly mobility
+        monthly_trend = (
+            filtered.groupby(["month", "country"], as_index=False)["trend"]
+            .mean()
+            .rename(columns={"trend": "Mobility Index (%)"})
         )
-        fig3.update_traces(mode="lines", hovertemplate="%{x}<br>%{y:.2f}%")
-        fig3.update_layout(legend_title="Country")
-        st.plotly_chart(fig3, use_container_width=True)
+        fig = px.line(
+            monthly_trend,
+            x="month",
+            y="Mobility Index (%)",
+            color="country",
+            markers=True,
+            labels={"month": "Year", "country": "Country"}
+        )
+        fig.update_layout(xaxis_tickangle=-45)
+        st.plotly_chart(fig, use_container_width=True)
 
         st.subheader("2. Bar Chart – Average Annual Mobility Comparison")
+        st.write("This bar chart compares the selected countries' average mobility in a specific year, revealing how different regions responded to the pandemic in terms of movement restrictions.")
         selected_year = st.selectbox("Select Year", years, index=years.index(2021) if 2021 in years else 0)
-
         # Filter further by selected year
         filtered_year = filtered[filtered["year"] == selected_year]
         avg_mobility = (
@@ -298,8 +400,6 @@ with multi_tab:
         )
         avg_mobility["avg_mobility"] = avg_mobility["avg_mobility"].round(2)
         avg_mobility = avg_mobility.sort_values(by="avg_mobility", ascending=False)
-
-        # Bar chart
         fig_bar = px.bar(
             avg_mobility,
             x="country",
@@ -310,7 +410,7 @@ with multi_tab:
             color="country",
             color_discrete_sequence=px.colors.qualitative.Set2
         )
-        fig_bar.update_traces(textposition="outside")
+        fig_bar.update_traces(textposition="auto")
         fig_bar.update_layout(
             xaxis_title="Country",
             yaxis_title="Mobility Index (%)",
