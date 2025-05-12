@@ -135,75 +135,75 @@ with global_tab:
     )
     st.plotly_chart(fig_treemap, use_container_width=True)
 
-    st.header("3. Treemap – Mobility under Combined Government Policies")
-    st.write("This treemap visualizes countries based on average mobility and combined policy stringency, highlighting how stronger restrictions typically correlate with reduced mobility.")
-    st.write("Note: The treemap is based on the average mobility index and policy strength score, which is a sum of various government policies.")
-    # Step 1: Prepare Data
-    treemap_data = merged_df.dropna(subset=[
-        "continent", "country", "trend",
-        "c1m_school_closing", "c2m_workplace_closing",
-        "c6m_stay_at_home_requirements", "c7m_restrictions_on_internal_movement"
-    ]).copy()
-    # Calculate policy score
-    treemap_data["policy_score"] = (
-        treemap_data["c1m_school_closing"] +
-        treemap_data["c2m_workplace_closing"] +
-        treemap_data["c6m_stay_at_home_requirements"] +
-        treemap_data["c7m_restrictions_on_internal_movement"]
-    )
-    # Group by Continent + Country
-    grouped = treemap_data.groupby(["continent", "country"], as_index=False).agg({
-        "trend": "mean",
-        "policy_score": "mean"
-    })
-    # Create Size based on mobility (must be positive)
-    grouped["mobility_size"] = grouped["trend"].abs() + 1
-    # Continent-Level Summary
-    continents_summary = grouped.groupby("continent").agg({
-        "mobility_size": "sum",
-        "policy_score": "mean"
-    }).reset_index()
-    continents_summary["country"] = ""
-    continents_summary["is_continent"] = True
-    # Mark countries
-    grouped["is_continent"] = False
-    # Merge
-    final_data = pd.concat([continents_summary, grouped], ignore_index=True)
-    # Now fix IDs properly
-    final_data["id"] = np.where(final_data["is_continent"],
-                                final_data["continent"],  # e.g., Asia
-                                final_data["continent"] + "/" + final_data["country"])  # e.g., Asia/China
+    # st.header("3. Treemap – Mobility under Combined Government Policies")
+    # st.write("This treemap visualizes countries based on average mobility and combined policy stringency, highlighting how stronger restrictions typically correlate with reduced mobility.")
+    # st.write("Note: The treemap is based on the average mobility index and policy strength score, which is a sum of various government policies.")
+    # # Step 1: Prepare Data
+    # treemap_data = merged_df.dropna(subset=[
+    #     "continent", "country", "trend",
+    #     "c1m_school_closing", "c2m_workplace_closing",
+    #     "c6m_stay_at_home_requirements", "c7m_restrictions_on_internal_movement"
+    # ]).copy()
+    # # Calculate policy score
+    # treemap_data["policy_score"] = (
+    #     treemap_data["c1m_school_closing"] +
+    #     treemap_data["c2m_workplace_closing"] +
+    #     treemap_data["c6m_stay_at_home_requirements"] +
+    #     treemap_data["c7m_restrictions_on_internal_movement"]
+    # )
+    # # Group by Continent + Country
+    # grouped = treemap_data.groupby(["continent", "country"], as_index=False).agg({
+    #     "trend": "mean",
+    #     "policy_score": "mean"
+    # })
+    # # Create Size based on mobility (must be positive)
+    # grouped["mobility_size"] = grouped["trend"].abs() + 1
+    # # Continent-Level Summary
+    # continents_summary = grouped.groupby("continent").agg({
+    #     "mobility_size": "sum",
+    #     "policy_score": "mean"
+    # }).reset_index()
+    # continents_summary["country"] = ""
+    # continents_summary["is_continent"] = True
+    # # Mark countries
+    # grouped["is_continent"] = False
+    # # Merge
+    # final_data = pd.concat([continents_summary, grouped], ignore_index=True)
+    # # Now fix IDs properly
+    # final_data["id"] = np.where(final_data["is_continent"],
+    #                             final_data["continent"],  # e.g., Asia
+    #                             final_data["continent"] + "/" + final_data["country"])  # e.g., Asia/China
 
-    final_data["parent"] = np.where(final_data["is_continent"], "", final_data["continent"])
-    # Drop NaNs
-    final_data = final_data.dropna(subset=["mobility_size", "policy_score", "id", "parent"])
-    # Step 2: Create Treemap
-    fig = go.Figure(go.Treemap(
-        ids=final_data["id"],
-        labels=np.where(final_data["is_continent"], final_data["continent"], final_data["country"]),
-        parents=final_data["parent"],
-        values=final_data["mobility_size"],
-        marker=dict(
-            colors=final_data["policy_score"],
-            colorscale="RdBu",
-            cmid=0,
-            colorbar=dict(title="Policy Strength Score")
-        ),
-        hovertemplate=(
-            "<b>%{label}</b><br>" +
-            "Avg Mobility: %{value:.2f}<br>" +
-            "Policy Score: %{color:.2f}<br>" +
-            "<extra></extra>"
-        ),
-        root_color="lightgrey",
-        branchvalues="total",
-    ))
-    fig.update_layout(
-        title_x=0.5,
-        margin=dict(t=50, l=25, r=25, b=25)
-    )
-    # Step 3: Streamlit Display
-    st.plotly_chart(fig, use_container_width=True)
+    # final_data["parent"] = np.where(final_data["is_continent"], "", final_data["continent"])
+    # # Drop NaNs
+    # final_data = final_data.dropna(subset=["mobility_size", "policy_score", "id", "parent"])
+    # # Step 2: Create Treemap
+    # fig = go.Figure(go.Treemap(
+    #     ids=final_data["id"],
+    #     labels=np.where(final_data["is_continent"], final_data["continent"], final_data["country"]),
+    #     parents=final_data["parent"],
+    #     values=final_data["mobility_size"],
+    #     marker=dict(
+    #         colors=final_data["policy_score"],
+    #         colorscale="RdBu",
+    #         cmid=0,
+    #         colorbar=dict(title="Policy Strength Score")
+    #     ),
+    #     hovertemplate=(
+    #         "<b>%{label}</b><br>" +
+    #         "Avg Mobility: %{value:.2f}<br>" +
+    #         "Policy Score: %{color:.2f}<br>" +
+    #         "<extra></extra>"
+    #     ),
+    #     root_color="lightgrey",
+    #     branchvalues="total",
+    # ))
+    # fig.update_layout(
+    #     title_x=0.5,
+    #     margin=dict(t=50, l=25, r=25, b=25)
+    # )
+    # # Step 3: Streamlit Display
+    # st.plotly_chart(fig, use_container_width=True)
 
 # ---------- Top Countries ----------
 with top_tab:
