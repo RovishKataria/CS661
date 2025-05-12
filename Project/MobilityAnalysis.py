@@ -17,7 +17,7 @@ import numpy as np
 @st.cache_data
 def load_data():
     # Get absolute path to the directory where the script is located
-    base_path = os.path.dirname("/mount/src/CS661/Project/MobilityAnalysis.py")
+    base_path = os.path.dirname(__file__)
     data_path = os.path.join(base_path, "Datasets", "MobilityAnalysis", "cleaned_data.parquet")
     df = pd.read_parquet(data_path)
     # df = pd.read_parquet("cleaned_data.parquet")
