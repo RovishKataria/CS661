@@ -14,7 +14,6 @@ import numpy as np
 # merged_df["month"] = merged_df["date"].dt.to_period("M").astype(str)
 # merged_df["year"] = merged_df["date"].dt.year
 
-@st.cache_data
 def load_data():
     # Get absolute path to the directory where the script is located
     base_path = os.path.dirname(__file__)
