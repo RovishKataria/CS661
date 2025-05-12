@@ -8,7 +8,7 @@ from scipy.signal import savgol_filter
 import numpy as np
 
 # # ---------- Load Cleaned Data ----------
-# data_path = os.path.join("Datasets", "Mobility Analysis", "cleaned_data.parquet")
+# data_path = os.path.join("Datasets", "MobilityAnalysis", "cleaned_data.parquet")
 # merged_df = pd.read_parquet(data_path)
 # merged_df = pd.read_parquet("cleaned_data.parquet")
 # merged_df["month"] = merged_df["date"].dt.to_period("M").astype(str)
@@ -16,9 +16,9 @@ import numpy as np
 
 @st.cache_data
 def load_data():
-    # data_path = os.path.join("Datasets", "Mobility Analysis", "cleaned_data.parquet")
-    # merged_df = pd.read_parquet(data_path)
-    df = pd.read_parquet("cleaned_data.parquet")
+    data_path = os.path.join("Datasets", "MobilityAnalysis", "cleaned_data.parquet")
+    df = pd.read_parquet(data_path)
+    # df = pd.read_parquet("cleaned_data.parquet")
     df["month"] = df["date"].dt.to_period("M").astype(str)
     df["year"] = df["date"].dt.year
     return df
