@@ -16,7 +16,9 @@ import numpy as np
 
 @st.cache_data
 def load_data():
-    data_path = os.path.join("Datasets", "MobilityAnalysis", "cleaned_data.parquet")
+    # Get absolute path to the directory where the script is located
+    base_path = os.path.dirname("/mount/src/CS661/Project/MobilityAnalysis.py")
+    data_path = os.path.join(base_path, "Datasets", "MobilityAnalysis", "cleaned_data.parquet")
     df = pd.read_parquet(data_path)
     # df = pd.read_parquet("cleaned_data.parquet")
     df["month"] = df["date"].dt.to_period("M").astype(str)
